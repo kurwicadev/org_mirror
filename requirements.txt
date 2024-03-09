@@ -1,0 +1,4 @@
+gitpython
+pygithub
+python-dotenv
+requests

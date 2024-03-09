@@ -2,3 +2,4 @@
 repositories/
 .env
 **/__pycache__/
+org_mirror.log

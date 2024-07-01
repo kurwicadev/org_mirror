@@ -68,11 +68,12 @@ def mirror_org(org):
         log.info("Creating forgejo remote")
         forgejo_remote = repo.create_remote("forgejo", forgejo_url)
 
+        log.info("Pushing branches")
         try:
-            log.info("Pushing branches")
             forgejo_remote.push(all=True, force=True)
-        except:
+        except Exception as e:
             log.warning(f"Failed pushing {github_repo.name}")
+            log.exception(e)
 
         shutil.rmtree(repo_path)
 

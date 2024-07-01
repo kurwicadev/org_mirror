@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from org_mirror import log
+from org_mirror import args, log
 from org_mirror.forgejo import Forgejo
 
 import os
@@ -10,12 +10,9 @@ from dotenv import load_dotenv
 from git import Repo
 from github import Github
 
-
 load_dotenv()
 
-
 # Required env variables
-ORG = os.getenv("ORG")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 FORGEJO_URL = os.getenv("FORGEJO_URL")
 FORGEJO_USER = os.getenv("FORGEJO_USER")
@@ -26,25 +23,25 @@ FORGEJO_SSH_PORT = os.getenv("FORGEJO_SSH_PORT", 2022)
 REPO_DIR = os.getenv("REPO_DIR", "repositories")
 
 
-def main():
-    log.info("Starting log_mirror")
+def mirror_org(org):
+    log.info(f"Mirroring {org} from github.com to {FORGEJO_URL}")
 
-    log.info("Creating repositories directory")
     if not os.path.exists(REPO_DIR):
+        log.info("Creating repositories directory")
         os.mkdir(REPO_DIR)
 
     forgejo = Forgejo(FORGEJO_USER, FORGEJO_PASSWORD, FORGEJO_URL)
-    forgejo.createOrg(ORG)
+    forgejo.createOrg(org)
 
     github = Github(GITHUB_TOKEN)
-    github_repositories = github.get_organization(ORG).get_repos()
+    github_repositories = github.get_organization(org).get_repos()
 
     for github_repo in github_repositories:
         log.info(f"Processing repository {github_repo.full_name}")
 
         repo_path = os.path.join(REPO_DIR, github_repo.full_name)
 
-        forgejo.createRepo(ORG, github_repo.name)
+        forgejo.createRepo(org, github_repo.name)
 
         clone_url = f"git@github.com:{github_repo.full_name}.git"
         forgejo_url = (
@@ -52,6 +49,10 @@ def main():
         )
 
         log.info("Cloning repository")
+
+        if os.path.exists(repo_path):
+            log.warning(f"Path {repo_path} already exists, removing")
+            shutil.rmtree(repo_path)
 
         repo = Repo.clone_from(clone_url, repo_path, no_single_branch=True)
 
@@ -67,14 +68,26 @@ def main():
         log.info("Creating forgejo remote")
         forgejo_remote = repo.create_remote("forgejo", forgejo_url)
 
-        log.info("Pushing branches")
-        forgejo_remote.push(all=True, force=True)
+        try:
+            log.info("Pushing branches")
+            forgejo_remote.push(all=True, force=True)
+        except:
+            log.warning(f"Failed pushing {github_repo.name}")
 
         shutil.rmtree(repo_path)
 
         log.info("Repository mirrored")
 
-    log.info("All done")
+    log.info(f"Organization {org} mirrored!")
+
+
+def main():
+    log.info("Starting log_mirror")
+
+    for org in args.org:
+        mirror_org(org)
+
+    log.info("All done!")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 import argparse
 import logging
 
+from dotenv import load_dotenv
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--cron", action="store_true")
@@ -21,3 +23,5 @@ logging.basicConfig(
     handlers=handlers
 )
 log = logging.getLogger(__name__)
+
+load_dotenv()

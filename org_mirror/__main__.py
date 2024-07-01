@@ -6,11 +6,8 @@ from org_mirror.forgejo import Forgejo
 import os
 import shutil
 
-from dotenv import load_dotenv
 from git import Repo
 from github import Github
-
-load_dotenv()
 
 # Required env variables
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")

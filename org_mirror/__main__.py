@@ -72,8 +72,6 @@ def mirror_org(org):
             log.warning(f"Failed pushing {github_repo.name}")
             log.exception(e)
 
-        shutil.rmtree(repo_path)
-
         log.info("Repository mirrored")
 
     log.info(f"Organization {org} mirrored!")
